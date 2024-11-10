@@ -242,4 +242,28 @@ AM_CONDITIONAL([ENABLE_ASAN],[test "x$enable_asan" = "xyes"])
 
 AC_SUBST([PATH])
 
+AC_ARG_ENABLE([erlang-interface],
+    AS_HELP_STRING([--enable-erlang-interface], [Enable Erlang port interface]))
+
+AS_IF([test "x$enable_erlang_interface" = "xyes"], [
+    # Check for Erlang development files
+    AC_CHECK_PROG([ERL], [erl], [erl])
+    AC_CHECK_PROG([ERLC], [erlc], [erlc])
+
+    if test "x$ERL" = "x" || test "x$ERLC" = "x"; then
+        AC_MSG_ERROR([Erlang development environment not found])
+    fi
+
+    # Get Erlang include path
+    AC_MSG_CHECKING([for Erlang include path])
+    ERLANG_ROOT_DIR=`$ERL -eval 'io:format("~s", [code:root_dir()]).' -s init stop -noshell`
+    ERLANG_INCLUDE="-I$ERLANG_ROOT_DIR/usr/include"
+    AC_MSG_RESULT([$ERLANG_INCLUDE])
+
+    AC_SUBST([ERLANG_CFLAGS], [$ERLANG_INCLUDE])
+    AC_SUBST([ERLANG_LIBS], ["-lei"])
+])
+
+AM_CONDITIONAL([ENABLE_ERLANG_INTERFACE], [test "x$enable_erlang_interface" = "xyes"])
+
 AC_OUTPUT
