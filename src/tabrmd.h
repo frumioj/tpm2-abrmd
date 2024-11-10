@@ -29,4 +29,9 @@ GQuark  tabrmd_error_quark (void);
 
 TSS2_RC tss2_tcti_tabrmd_dump_trans_state (TSS2_TCTI_CONTEXT *tcti_context);
 
-#endif /* TSS2_TABD_H */
+typedef struct tabrmd_handle {
+    // ... existing fields ...
+    GThread *erlang_thread;
+    TSS2_TCTI_CONTEXT *erlang_tcti;
+    // ... existing fields ...
+} TabrmdHandle;

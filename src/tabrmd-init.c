@@ -254,3 +254,64 @@ err_out:
     gmain_data_cleanup (data);
     return GINT_TO_POINTER (ret);
 }
+
+TSS2_RC
+tabrmd_erlang_init (TabrmdHandle *handle)
+{
+    TSS2_RC rc = TSS2_RC_SUCCESS;
+    GThread *thread;
+
+    thread = g_thread_new ("erlang-connection",
+                          (GThreadFunc)erlang_thread_func,
+                          handle);
+    if (thread == NULL) {
+        g_error ("failed to create Erlang connection thread");
+        return TSS2_RESMGR_RC_INTERNAL_ERROR;
+    }
+    handle->erlang_thread = thread;
+
+    // Create TCTI instance for Erlang interface
+    rc = tcti_factory_create (handle->tcti_factory,
+                             &handle->erlang_tcti);
+    if (rc != TSS2_RC_SUCCESS) {
+        g_error ("failed to create TCTI instance for Erlang interface: 0x%" PRIx32, rc);
+        g_thread_unref (thread);
+        return rc;
+    }
+
+    // Initialize Erlang node and connection setup
+    // ... existing Erlang initialization code ...
+
+    return rc;
+}
+
+static void*
+erlang_thread_func (gpointer data)
+{
+    TabrmdHandle *handle = TABRMD_HANDLE (data);
+    TSS2_RC rc;
+    
+    // Set up message handling loop for Erlang
+    while (!handle->terminate) {
+        // Handle incoming Erlang messages
+        // Process TPM commands using handle->erlang_tcti
+    }
+
+    return NULL;
+}
+
+void
+tabrmd_erlang_finalize (TabrmdHandle *handle)
+{
+    if (handle->erlang_tcti != NULL) {
+        Tss2_Tcti_Finalize (handle->erlang_tcti);
+        handle->erlang_tcti = NULL;
+    }
+    
+    if (handle->erlang_thread != NULL) {
+        g_thread_join (handle->erlang_thread);
+        handle->erlang_thread = NULL;
+    }
+
+    // ... existing Erlang cleanup code ...
+}

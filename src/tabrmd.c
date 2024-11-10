@@ -68,3 +68,25 @@ out:
     gmain_data_cleanup (&gmain_data);
     return ret;
 }
+
+static void
+tabrmd_init (Tabrmd *tabrmd)
+{
+    // ... existing initialization ...
+    
+    // Add Erlang interface
+    tabrmd->erlang_interface = tabrmd_erlang_interface_new (tabrmd);
+    
+    // ... rest of initialization ...
+}
+
+static void
+tabrmd_startup (Tabrmd *tabrmd)
+{
+    // ... existing startup code ...
+    
+    // Start Erlang interface
+    tabrmd_erlang_interface_start (tabrmd->erlang_interface);
+    
+    // ... rest of startup ...
+}
