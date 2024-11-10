@@ -289,6 +289,15 @@ src_tpm2_abrmd_LDADD   = $(GIO_LIBS) $(GLIB_LIBS) $(PTHREAD_LIBS) \
     $(TSS2_SYS_LIBS) $(TSS2_TCTILDR_LIBS) $(libutil)
 src_tpm2_abrmd_SOURCES = src/tabrmd.c
 
+if ENABLE_ERLANG_INTERFACE
+src_tpm2_abrmd_SOURCES += \
+    src/tabrmd-erlang.c \
+    src/tabrmd-erlang.h
+
+src_tpm2_abrmd_CFLAGS += $(ERLANG_CFLAGS)
+src_tpm2_abrmd_LDADD += $(ERLANG_LIBS)
+endif
+
 AUTHORS :
 	git log --format='%aN <%aE>' | grep -v 'users.noreply.github.com' | sort | \
 	    uniq -c | sort -nr | sed 's/^\s*//' | cut -d" " -f2- > $@
