@@ -96,6 +96,47 @@ AS_IF([test "x$with_systemdsystemunitdir" != xno],
       [$with_systemdsystemunitdir])])
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno ])
 
+# Check for Erlang support using AC_CHECK_HEADERS and AC_CHECK_LIB
+AC_ARG_WITH([erlang],
+    [AS_HELP_STRING([--with-erlang], [Enable Erlang C Node support])],
+    [with_erlang=yes], [with_erlang=no])
+
+if test "x$with_erlang" = "xyes"; then
+   AC_MSG_CHECKING([for Erlang root directory])
+   ERLANG_ROOT_DIR="/home/johnk/.asdf/installs/erlang/27.0.1"
+   #erl -eval 'io:format("~s~n", [code:root_dir()])' -s init stop -noshell`
+   AC_MSG_RESULT([$ERLANG_ROOT_DIR])
+   AC_SUBST([ERLANG_ROOT_DIR])
+
+   #ONE DAY... ERLANG_ROOT_DIR=$(erl -eval 'io:format("~s", [code:root_dir()])' -s init stop -noshell)
+   ERLANG_INCLUDE_DIR="$ERLANG_ROOT_DIR/usr/include"
+   ERLANG_LIB_DIR="$ERLANG_ROOT_DIR/usr/lib"
+   ERLANG_CFLAGS="-I$ERLANG_INCLUDE_DIR"
+   ERLANG_LIBS="-L$ERLANG_LIB_DIR -lei"
+   CFLAGS_backup="${CFLAGS}"
+   LDFLAGS_backup="${LDFLAGS}"
+   CFLAGS="${ERLANG_CFLAGS} ${CFLAGS}"
+   LDFLAGS="${ERLANG_LIBS} ${LDFLAGS}"
+   
+   # Check for Erlang headers (ei.h) and the erl_interface library
+   AC_CHECK_HEADERS([ei.h], [HAVE_ERLANG_HEADERS=yes], [HAVE_ERLANG_HEADERS=no])
+   AC_CHECK_LIB([ei], [ei_connect_init], [HAVE_ERLANG_LIB=yes], [HAVE_ERLANG_LIB=no])
+
+    # Define a conditional for building with Erlang if both checks pass
+    if test "x$HAVE_ERLANG_HEADERS" = "xyes" && test "x$HAVE_ERLANG_LIB" = "xyes"; then
+        AC_DEFINE([HAVE_ERLANG], [1], [Define if building with Erlang support])
+        AM_CONDITIONAL([BUILD_ERLANG], [true])
+    else
+        AM_CONDITIONAL([BUILD_ERLANG], [false])
+        AC_MSG_ERROR([Erlang headers or library not found. Please install erlang-dev package.])
+    fi
+    
+    CFLAGS="${CFLAGS_backup}"
+    LDFLAGS="${LDFLAGS_backup}"
+else
+    AM_CONDITIONAL([BUILD_ERLANG], [false])
+fi
+
 # systemd preset directory
 AC_ARG_WITH([systemdpresetdir],
             AS_HELP_STRING([--with-systemdpresetdir=DIR],
